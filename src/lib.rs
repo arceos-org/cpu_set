@@ -104,7 +104,17 @@ where
     /// Construct a cpumask from a raw `usize` value.
     /// The value must be less than `2^SIZE`, panick if the value is too large.
     pub fn from_raw_bits(value: usize) -> Self {
-        assert!(value >> SIZE == 0);
+        // Bypass the value check for the case where SIZE is larger than 64 temporarily.
+        // Ref:
+        // 1. https://doc.rust-lang.org/std/primitive.usize.html#method.strict_shr
+        // 2. https://doc.rust-lang.org/std/primitive.usize.html#method.wrapping_shr
+        if SIZE < 64 {
+            assert!(
+                value >> SIZE == 0,
+                "value {value:#x} is too large for cpumask of size {SIZE}, Value >> SIZE {:#x}",
+                value >> SIZE
+            );
+        }
 
         let mut bit_map = Bitmap::new();
         let mut i = 0;
